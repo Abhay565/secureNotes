@@ -12,6 +12,7 @@ import {
   RefreshControl,
   Modal,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { supabase } from "../lib/supabase";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -25,8 +26,10 @@ export default function HomeScreen({ navigation }) {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [noteToEdit, setNoteToEdit] = useState(null);
   const [editedContent, setEditedContent] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const fetchNotes = async () => {
+    setLoading(true)
     const { data: userData, error: userError } = await supabase.auth.getUser();
     if (userError) {
       console.error("User fetch error:", userError.message);
@@ -43,6 +46,7 @@ export default function HomeScreen({ navigation }) {
     } else {
       setNotes(data);
     }
+    setLoading(false)
   };
 
   useEffect(() => {
@@ -57,69 +61,68 @@ export default function HomeScreen({ navigation }) {
     setRefreshing(false);
   };
 
-const handleDelete = async (id) => {
-  const { error } = await supabase.from("notes").delete().eq("id", id);
-  if (error) {
-    Alert.alert("Error", "Failed to delete note.");
-  } else {
-    fetchNotes();
-  }
-};
+  const handleDelete = async (id) => {
+    const { error } = await supabase.from("notes").delete().eq("id", id);
+    if (error) {
+      Alert.alert("Error", "Failed to delete note.");
+    } else {
+      fetchNotes();
+    }
+  };
 
   const openEditModal = (note) => {
-  setNoteToEdit(note);
-  setEditedContent(note.content);
-  setIsEditModalVisible(true);
-};
+    setNoteToEdit(note);
+    setEditedContent(note.content);
+    setIsEditModalVisible(true);
+  };
 
   const handleMenu = (item) => {
-  Alert.alert(
-    "Note Options",
-    "Choose an action",
-    [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Edit",
-        onPress: () => {
-          setNoteToEdit(item);
-          setEditedContent(item.content);
-          setIsEditModalVisible(true);
+    Alert.alert(
+      "Note Options",
+      "Choose an action",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Edit",
+          onPress: () => {
+            setNoteToEdit(item);
+            setEditedContent(item.content);
+            setIsEditModalVisible(true);
+          },
         },
-      },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () => handleDelete(item.id),
-      },
-    ],
-    { cancelable: true }
-  );
-};
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => handleDelete(item.id),
+        },
+      ],
+      { cancelable: true }
+    );
+  };
 
-const handleUpdateNote = async () => {
-  if (!editedContent.trim()) {
-    Alert.alert("Error", "Note content cannot be empty");
-    return;
-  }
+  const handleUpdateNote = async () => {
+    if (!editedContent.trim()) {
+      Alert.alert("Error", "Note content cannot be empty");
+      return;
+    }
 
-  const { error } = await supabase
-    .from("notes")
-    .update({
-      content: editedContent,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", noteToEdit.id);
+    const { error } = await supabase
+      .from("notes")
+      .update({
+        content: editedContent,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", noteToEdit.id);
 
-  if (error) {
-    Alert.alert("Update Failed", error.message);
-  } else {
-    setIsEditModalVisible(false);
-    setNoteToEdit(null);
-    setEditedContent("");
-    fetchNotes();
-  }
-};
-
+    if (error) {
+      Alert.alert("Update Failed", error.message);
+    } else {
+      setIsEditModalVisible(false);
+      setNoteToEdit(null);
+      setEditedContent("");
+      fetchNotes();
+    }
+  };
 
   const handleAddNote = async () => {
     // if (!newNoteContent.trim()) {
@@ -173,7 +176,7 @@ const handleUpdateNote = async () => {
 
   return (
     <SafeAreaView style={styles.container}>
-       <StatusBar
+      <StatusBar
         barStyle="light-content"
         backgroundColor="transparent"
         translucent={true}
@@ -184,126 +187,137 @@ const handleUpdateNote = async () => {
         end={{ x: 1, y: 0 }}
         style={styles.statusBarGradient}
       />
-      <Text style={styles.heading}>Your Notes</Text>
 
-      <Modal
-        visible={isEditModalVisible}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setIsEditModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Edit Note</Text>
-            <TextInput
-              style={styles.modalInput}
-              value={editedContent}
-              onChangeText={setEditedContent}
-              multiline
-              placeholder="Update your note"
-              placeholderTextColor="#999"
-            />
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                onPress={() => setIsEditModalVisible(false)}
-                style={styles.cancelButton}
-              >
-                <Text style={styles.cancelText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleUpdateNote}
-                style={styles.saveButton}
-              >
-                <Text style={styles.saveText}>Save</Text>
-              </TouchableOpacity>
+      {!loading ? (
+        <>
+          <Text style={styles.heading}>Your Notes</Text>
+
+          <Modal
+            visible={isEditModalVisible}
+            animationType="slide"
+            transparent
+            onRequestClose={() => setIsEditModalVisible(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContainer}>
+                <Text style={styles.modalTitle}>Edit Note</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={editedContent}
+                  onChangeText={setEditedContent}
+                  multiline
+                  placeholder="Update your note"
+                  placeholderTextColor="#999"
+                />
+                <View style={styles.modalButtons}>
+                  <TouchableOpacity
+                    onPress={() => setIsEditModalVisible(false)}
+                    style={styles.cancelButton}
+                  >
+                    <Text style={styles.cancelText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleUpdateNote}
+                    style={styles.saveButton}
+                  >
+                    <Text style={styles.saveText}>Save</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
-          </View>
-        </View>
-      </Modal>
+          </Modal>
 
-      <FlatList
-        data={notes}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={renderNote}
-        contentContainerStyle={styles.list}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        ListEmptyComponent={
-          <Text style={styles.empty}>No notes found. Tap + to add one.</Text>
-        }
-      />
+          <FlatList
+            data={notes}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderNote}
+            contentContainerStyle={styles.list}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+            ListEmptyComponent={
+              <Text style={styles.empty}>
+                No notes found. Tap + to add one.
+              </Text>
+            }
+          />
 
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>New Note</Text>
-            <TextInput
-              placeholder="Enter note content..."
-              value={newNoteContent}
-              onChangeText={setNewNoteContent}
-              style={styles.modalInput}
-              multiline
-            />
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                onPress={() => setModalVisible(false)}
-                style={styles.modalCancel}
-              >
-                <Text style={{ color: "#999" }}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleAddNote}
-                style={styles.modalSave}
-              >
-                <Text style={{ color: "white" }}>Save</Text>
-              </TouchableOpacity>
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={modalVisible}
+            onRequestClose={() => setModalVisible(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>New Note</Text>
+                <TextInput
+                  placeholder="Enter note content..."
+                  value={newNoteContent}
+                  onChangeText={setNewNoteContent}
+                  style={styles.modalInput}
+                  multiline
+                />
+                <View style={styles.modalActions}>
+                  <TouchableOpacity
+                    onPress={() => setModalVisible(false)}
+                    style={styles.modalCancel}
+                  >
+                    <Text style={{ color: "#999" }}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={handleAddNote}
+                    style={styles.modalSave}
+                  >
+                    <Text style={{ color: "white" }}>Save</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             </View>
-          </View>
+          </Modal>
+
+          {/* Floating Add Button */}
+          <TouchableOpacity
+            onPress={() => setModalVisible(true)}
+            style={styles.floatingButtonWrapper} // Wrap for positioning
+          >
+            <LinearGradient
+              colors={["#4b6cb7", "#8e44ad"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.floatingButtonGradient}
+            >
+              <Icon name="plus" size={28} color="#fff" />
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {/* Optional Logout Button */}
+          <TouchableOpacity
+            onPress={() =>
+              Alert.alert(
+                "Logout",
+                "Are you sure you want to logout?",
+                [
+                  { text: "Cancel", style: "cancel" },
+                  {
+                    text: "Logout",
+                    style: "destructive",
+                    onPress: handleLogout,
+                  },
+                ],
+                { cancelable: true }
+              )
+            }
+            style={styles.logoutBtn}
+          >
+            <Text style={[styles.linkText, { color: "red" }]}>Logout</Text>
+          </TouchableOpacity>
+        </>
+      ) : (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size={40} color={"red"} />
         </View>
-      </Modal>
-
-      {/* Floating Add Button */}
-      <TouchableOpacity
-        onPress={() => setModalVisible(true)}
-        style={styles.floatingButtonWrapper} // Wrap for positioning
-      >
-        <LinearGradient
-          colors={["#4b6cb7", "#8e44ad"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.floatingButtonGradient}
-        >
-          <Icon name="plus" size={28} color="#fff" />
-        </LinearGradient>
-      </TouchableOpacity>
-
-      {/* Optional Logout Button */}
-      <TouchableOpacity
-        onPress={() =>
-          Alert.alert(
-            "Logout",
-            "Are you sure you want to logout?",
-            [
-              { text: "Cancel", style: "cancel" },
-              {
-                text: "Logout",
-                style: "destructive",
-                onPress: handleLogout,
-              },
-            ],
-            { cancelable: true }
-          )
-        }
-        style={styles.logoutBtn}
-      >
-        <Text style={[styles.linkText, { color: "red" }]}>Logout</Text>
-      </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 }
@@ -313,6 +327,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f9f9f9",
     padding: 24,
+  },
+  loadingContainer:{
+  flex:1,
+  justifyContent: "center",
+  alignItems: "center",
   },
   heading: {
     fontSize: 24,
@@ -329,7 +348,7 @@ const styles = StyleSheet.create({
     width: "85%",
     elevation: 5,
   },
-   statusBarGradient: {
+  statusBarGradient: {
     position: "absolute",
     top: 0,
     left: 0,
