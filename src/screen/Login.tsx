@@ -15,8 +15,8 @@ import { LinearGradient } from "expo-linear-gradient";
 import { supabase } from "../lib/supabase";
 
 export default function Login({ navigation }) {
-  const [email, setEmail] = useState("abhay12@yopmail");
-  const [password, setPassword] = useState("111111");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
   const handleLogin = async () => {
