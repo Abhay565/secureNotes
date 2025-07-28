@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  StatusBar,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { supabase } from "../lib/supabase";
@@ -33,6 +34,19 @@ export default function Login({ navigation }) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f5f5f5" }}>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="transparent"
+        translucent={true}
+      />
+
+      {/* Gradient behind status bar */}
+      <LinearGradient
+        colors={["#4b6cb7", "#8e44ad"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.statusBarGradient}
+      />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -88,6 +102,14 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: "center",
   },
+  statusBarGradient: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      height: Platform.OS === "ios" ? 44 : StatusBar.currentHeight, // height for iOS/Android
+      zIndex: 10,
+    },
   title: {
     fontSize: 26,
     fontWeight: "bold",

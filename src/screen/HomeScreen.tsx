@@ -11,6 +11,7 @@ import {
   StatusBar,
   RefreshControl,
   Modal,
+  Platform,
 } from "react-native";
 import { supabase } from "../lib/supabase";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -172,7 +173,17 @@ const handleUpdateNote = async () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+       <StatusBar
+        barStyle="light-content"
+        backgroundColor="transparent"
+        translucent={true}
+      />
+      <LinearGradient
+        colors={["#4b6cb7", "#8e44ad"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.statusBarGradient}
+      />
       <Text style={styles.heading}>Your Notes</Text>
 
       <Modal
@@ -301,7 +312,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f9f9f9",
-    marginTop: 20,
+    padding: 24,
   },
   heading: {
     fontSize: 24,
@@ -317,6 +328,14 @@ const styles = StyleSheet.create({
     padding: 20,
     width: "85%",
     elevation: 5,
+  },
+   statusBarGradient: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: Platform.OS === "ios" ? 44 : StatusBar.currentHeight, // height for iOS/Android
+    zIndex: 10,
   },
   modalButtons: {
     flexDirection: "row",
@@ -338,7 +357,7 @@ const styles = StyleSheet.create({
 
   list: {
     paddingBottom: 100,
-    paddingHorizontal: 20,
+    // paddingHorizontal: 20,
   },
   noteRowContainer: {
     flexDirection: "row",
